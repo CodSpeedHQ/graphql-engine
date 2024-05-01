@@ -1,0 +1,33 @@
+name: codspeed-benchmarks
+
+on:
+  # Run on pushes to the master branch
+  push:
+    branches:
+      - "master"
+  # Run on pull requests
+  pull_request:
+  # `workflow_dispatch` allows CodSpeed to trigger backtest
+  # performance analysis in order to generate initial data.
+  workflow_dispatch:
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup rust toolchain, cache and cargo-codspeed binary
+        uses: moonrepo/setup-rust@v1
+        with:
+          cache-target: release
+          bins: cargo-codspeed
+
+      - name: Build the benchmark target(s)
+        working-directory: v3
+        run: cargo codspeed build -p engine -p lang-graphql
+
+      - name: Run the benchmarks
+        uses: CodSpeedHQ/action@v2
+        with:
+          working-directory: v3
+          run: cargo codspeed run -p engine -p lang-graphql
